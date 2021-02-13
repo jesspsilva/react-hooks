@@ -2,12 +2,14 @@ import React, { useState, useCallback } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
+import ErrorModal from '../UI/ErrorModal';
 import Search from './Search';
 
 function Ingredients() {
 
   const [ingredients, setIngredients] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const addIngredientHandler = ingredient => {
     setIsLoading(true);
@@ -31,11 +33,14 @@ function Ingredients() {
 
   const removeIngredientHandler = ingId => {
     setIsLoading(true);
-    fetch(`https://react-hooks-21-default-rtdb.firebaseio.com/ingredients/${ingId}.json`, {
+    fetch(`https://react-hooks-21-default-rtdb.firebaseio.com/ingredients/${ingId}.jon`, {
       method: 'DELETE',
     }).then(res => {
       setIsLoading(false);
       setIngredients(prevState => prevState.filter(ingredient => ingredient.id !== ingId));
+    }).catch(err => {
+      setError('Something went wrong!');
+      setIsLoading(false);
     })
   }
 
@@ -43,8 +48,13 @@ function Ingredients() {
     setIngredients(filteredIngredients);
   }, []);
 
+  const clearError = () => {
+    setError(null);
+  }
+
   return (
     <div className="App">
+      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
       <IngredientForm onAddIngredientHandler={addIngredientHandler} loading={isLoading}/>
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler}/>
