@@ -1,4 +1,4 @@
-import React, { useReducer, useCallback } from 'react';
+import React, { useReducer, useCallback, useMemo } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -37,7 +37,7 @@ function Ingredients() {
   const [ingredients, dispatch] = useReducer(ingredientReducer, []);
   const [httpState, dispatchHttp] = useReducer(httpReducer, {loading: false, error: null});
 
-  const addIngredientHandler = ingredient => {
+  const addIngredientHandler = useCallback(ingredient => {
     dispatchHttp({type: 'SEND'});
     fetch('https://react-hooks-21-default-rtdb.firebaseio.com/ingredients.json', {
       method: 'POST',
@@ -54,9 +54,9 @@ function Ingredients() {
         ingredient: {id: data.name, ...ingredient}
       })
     });
-  }
+  }, [])
 
-  const removeIngredientHandler = ingId => {
+  const removeIngredientHandler = useCallback(ingId => {
     dispatchHttp({type: 'SEND'});
     fetch(`https://react-hooks-21-default-rtdb.firebaseio.com/ingredients/${ingId}.json`, {
       method: 'DELETE',
@@ -69,7 +69,7 @@ function Ingredients() {
     }).catch(err => {
       dispatchHttp({type:'ERROR', errorMessage: 'Something went wrong!'});
     })
-  }
+  }, [])
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
     dispatch({
@@ -78,9 +78,13 @@ function Ingredients() {
     })
   }, []);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatchHttp({type:'CLEAR'});
-  }
+  }, []);
+
+  const ingredientList = useMemo(() => {
+    return <IngredientList ingredients={ingredients} onRemoveItem={removeIngredientHandler}/>
+  }, [ingredients, removeIngredientHandler]);
 
   return (
     <div className="App">
@@ -88,7 +92,7 @@ function Ingredients() {
       <IngredientForm onAddIngredientHandler={addIngredientHandler} loading={httpState.loading}/>
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler}/>
-        <IngredientList ingredients={ingredients} onRemoveItem={removeIngredientHandler}/>
+        {ingredientList}
       </section>
     </div>
   );
